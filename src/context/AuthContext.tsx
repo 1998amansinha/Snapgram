@@ -1,11 +1,6 @@
 import { getCurrentUser } from "@/lib/appwrite/api";
 import { IContextType, IUser } from "@/types";
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-} from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Defining how an empty user is goona look like
@@ -31,62 +26,61 @@ const INITIAL_STATE = {
 // Declearing the context
 const AuthContext = createContext<IContextType>(INITIAL_STATE);
 
-const [user, setUser] = useState<IUser>(INITIAL_USER);
-const [isLoading, setIsLoading] = useState(false);
-const [isAuthenticated, setIsAuthenticated] = useState(false);
-const navigate = useNavigate()
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<IUser>(INITIAL_USER);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-const checkAuthUser = async () => {
-  try {
-    const currentAccount = await getCurrentUser();
-    if (currentAccount) {
-      setUser({
-        id: currentAccount.$id,
-        name: currentAccount.name,
-        username: currentAccount.username,
-        email: currentAccount.email,
-        imageUrl: currentAccount.imageurl,
-        bio: currentAccount.bio,
-      })
+  const checkAuthUser = async () => {
+    try {
+      const currentAccount = await getCurrentUser();
+      if (currentAccount) {
+        setUser({
+          id: currentAccount.$id,
+          name: currentAccount.name,
+          username: currentAccount.username,
+          email: currentAccount.email,
+          imageUrl: currentAccount.imageurl,
+          bio: currentAccount.bio,
+        });
 
-      setIsAuthenticated(true)
-      return true
+        setIsAuthenticated(true);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.log(error);
+      return false;
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    return false
-
-  } catch (error) {
-    console.log(error);
-    return false;
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-useEffect(() => {
-    if(
-        localStorage.getItem('cookieFallback') === '[]' ||
-        localStorage.getItem('cookieFallback') === null
-    ) navigate('sign-in')
+  useEffect(() => {
+    if (
+      localStorage.getItem("cookieFallback") === "[]" ||
+      localStorage.getItem("cookieFallback") === null
+    )
+      navigate("sign-in");
 
     // Whenever Page is reloaded we will check our User Authentication
-    checkAuthUser(); 
+    checkAuthUser();
+  }, []);
 
-}, []);
+  const value = {
+    user,
+    setUser,
+    isLoading,
+    isAuthenticated,
+    setIsAuthenticated,
+    checkAuthUser,
+  };
 
-const value = {
-  user,
-  setUser,
-  isLoading,
-  isAuthenticated,
-  setIsAuthenticated,
-  checkAuthUser,
-};
-
-const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
 
 export default AuthProvider;
 
-export const useUserContext = () => useContext(AuthContext)
+export const useUserContext = () => useContext(AuthContext);
