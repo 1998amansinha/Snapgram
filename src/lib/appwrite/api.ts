@@ -1,14 +1,18 @@
-import { INewUser } from "@/types";
-import { account, appwriteConfig, avatars, databases } from "./config";
 import { ID, Query } from "appwrite";
+
+import { appwriteConfig, account, databases, storage, avatars } from "./config";
+import { IUpdatePost, INewPost, INewUser, IUpdateUser } from "@/types";
+
+// ============== AUTH  SIGN UP ============
+
 
 export async function createUserAccount(user: INewUser) {
   try {
     const newAccount = await account.create(
       ID.unique(),
-      user.name,
       user.email,
-      user.password
+      user.password,
+      user.name
     );
 
     if (!newAccount) throw Error;
@@ -17,18 +21,20 @@ export async function createUserAccount(user: INewUser) {
 
     const newUser = await saveUserToDB({
       accountId: newAccount.$id,
-      email: newAccount.email,
       name: newAccount.name,
-      imageUrl: avatarUrl,
+      email: newAccount.email,
       username: user.username,
+      imageUrl: avatarUrl,
     });
 
     return newUser;
   } catch (error) {
     console.log(error);
+    return error;
   }
 }
 
+// ============================== SAVE USER TO DB
 export async function saveUserToDB(user: {
   accountId: string;
   email: string;
@@ -50,18 +56,32 @@ export async function saveUserToDB(user: {
   }
 }
 
+// ============================== SIGN IN
 export async function signInAccount(user: { email: string; password: string }) {
   try {
     const session = await account.createEmailSession(user.email, user.password);
+
     return session;
   } catch (error) {
     console.log(error);
   }
 }
 
-export async function getCurrentUser() {
+// ============================== GET ACCOUNT
+export async function getAccount() {
   try {
     const currentAccount = await account.get();
+
+    return currentAccount;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// ============================== GET USER
+export async function getCurrentUser() {
+  try {
+    const currentAccount = await getAccount();
 
     if (!currentAccount) throw Error;
 
@@ -76,5 +96,8 @@ export async function getCurrentUser() {
     return currentUser.documents[0];
   } catch (error) {
     console.log(error);
+    return null;
   }
 }
+
+
