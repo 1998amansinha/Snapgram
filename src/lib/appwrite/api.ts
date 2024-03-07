@@ -1,7 +1,7 @@
 import { ID, Query } from "appwrite";
 
-import { appwriteConfig, account, databases, storage, avatars } from "./config";
-import { IUpdatePost, INewPost, INewUser, IUpdateUser } from "@/types";
+import { appwriteConfig, account, databases, avatars } from "./config";
+import {  INewUser } from "@/types";
 
 // ============== AUTH  SIGN UP ============
 
@@ -97,6 +97,15 @@ export async function getCurrentUser() {
   } catch (error) {
     console.log(error);
     return null;
+  }
+}
+
+export async function signOutAccount() {
+  try {
+    const session = await account.deleteSession("current")
+    return session
+  } catch (error) {
+    console.log(error);
   }
 }
 
